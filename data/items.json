@@ -1,0 +1,98 @@
+{
+  "items": [
+    {
+      "id": "business_license",
+      "name": "Business License",
+      "description": "Required to open a business in Simora.",
+      "price": 50000,
+      "sellable": false,
+      "stackable": false,
+      "consumable": true
+    },
+    {
+      "id": "faction_charter",
+      "name": "Faction Charter",
+      "description": "A legal document allowing faction formation.",
+      "price": 100000,
+      "sellable": false,
+      "stackable": false,
+      "consumable": true
+    },
+    {
+      "id": "lockpick",
+      "name": "Lockpick Set",
+      "description": "Increases burglary success chance by 10%.",
+      "price": 5000,
+      "sellable": true,
+      "stackable": false,
+      "consumable": true,
+      "effect": {"crime_bonus": 0.10, "crime_type": "burglary"}
+    },
+    {
+      "id": "smoke_grenade",
+      "name": "Smoke Grenade",
+      "description": "Escape any crime once. One-time use.",
+      "price": 10000,
+      "sellable": true,
+      "stackable": false,
+      "consumable": true,
+      "effect": {"escape_chance": 1.0}
+    },
+    {
+      "id": "stocks_tip",
+      "name": "Insider Tip",
+      "description": "Reveals next stock movement direction.",
+      "price": 2500,
+      "sellable": true,
+      "stackable": false,
+      "consumable": true
+    },
+    {
+      "id": "rep_boost",
+      "name": "Reputation Boost",
+      "description": "Grants +50 reputation instantly.",
+      "price": 10000,
+      "sellable": false,
+      "stackable": false,
+      "consumable": true,
+      "effect": {"rep_gain": 50}
+    },
+    {
+      "id": "business_upgrade_token",
+      "name": "Business Upgrade Token",
+      "description": "Upgrade a business without reputation requirement.",
+      "price": 25000,
+      "sellable": false,
+      "stackable": false,
+      "consumable": true
+    },
+    {
+      "id": "heist_blueprint",
+      "name": "Heist Blueprint",
+      "description": "Increases heist success chance by 15%.",
+      "price": 15000,
+      "sellable": true,
+      "stackable": false,
+      "consumable": true,
+      "effect": {"heist_bonus": 0.15}
+    },
+    {
+      "id": "tax_waiver",
+      "name": "Tax Waiver",
+      "description": "Waives next tax collection.",
+      "price": 5000,
+      "sellable": true,
+      "stackable": false,
+      "consumable": true
+    },
+    {
+      "id": "bounty_clear",
+      "name": "Bounty Clearance",
+      "description": "Removes any active bounty on you.",
+      "price": 25000,
+      "sellable": false,
+      "stackable": false,
+      "consumable": true
+    }
+  ]
+}

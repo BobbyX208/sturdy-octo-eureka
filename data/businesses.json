@@ -1,0 +1,124 @@
+{
+  "businesses": [
+    {
+      "id": "food_stall",
+      "name": "Food Stall",
+      "district": 1,
+      "description": "Selling cheap meals to Slums residents.",
+      "base_income": 500,
+      "upkeep": 50,
+      "tier_2_cost": 10000,
+      "tier_3_cost": 50000,
+      "min_rep": 0,
+      "max_tier": 3
+    },
+    {
+      "id": "laundromat",
+      "name": "Laundromat",
+      "district": 2,
+      "description": "Clean clothes, clean money.",
+      "base_income": 800,
+      "upkeep": 100,
+      "tier_2_cost": 25000,
+      "tier_3_cost": 100000,
+      "min_rep": 1,
+      "max_tier": 3
+    },
+    {
+      "id": "bar",
+      "name": "Bar",
+      "district": 5,
+      "description": "Serving drinks and keeping secrets.",
+      "base_income": 1200,
+      "upkeep": 200,
+      "tier_2_cost": 50000,
+      "tier_3_cost": 200000,
+      "min_rep": 2,
+      "max_tier": 3
+    },
+    {
+      "id": "warehouse",
+      "name": "Warehouse",
+      "district": 2,
+      "description": "Storage and logistics. Marco approves.",
+      "base_income": 1000,
+      "upkeep": 150,
+      "tier_2_cost": 40000,
+      "tier_3_cost": 150000,
+      "min_rep": 2,
+      "max_tier": 3
+    },
+    {
+      "id": "retail_shop",
+      "name": "Retail Shop",
+      "district": 3,
+      "description": "Selling goods to Downtown shoppers.",
+      "base_income": 1500,
+      "upkeep": 250,
+      "tier_2_cost": 75000,
+      "tier_3_cost": 300000,
+      "min_rep": 3,
+      "max_tier": 3
+    },
+    {
+      "id": "restaurant",
+      "name": "Restaurant",
+      "district": 3,
+      "description": "Fine dining. Ms. Chen has opinions about food.",
+      "base_income": 2000,
+      "upkeep": 350,
+      "tier_2_cost": 100000,
+      "tier_3_cost": 500000,
+      "min_rep": 4,
+      "max_tier": 3
+    },
+    {
+      "id": "trading_post",
+      "name": "Trading Post",
+      "district": 4,
+      "description": "Buy low, sell high. The Broker respects the hustle.",
+      "base_income": 2500,
+      "upkeep": 500,
+      "tier_2_cost": 150000,
+      "tier_3_cost": 750000,
+      "min_rep": 5,
+      "max_tier": 3
+    },
+    {
+      "id": "club",
+      "name": "Night Club",
+      "district": 5,
+      "description": "Where the city comes to forget. Lou owns the building.",
+      "base_income": 3000,
+      "upkeep": 750,
+      "tier_2_cost": 200000,
+      "tier_3_cost": 1000000,
+      "min_rep": 6,
+      "max_tier": 3
+    },
+    {
+      "id": "black_market",
+      "name": "Black Market",
+      "district": 6,
+      "description": "Underground trading. Ghost doesn't talk about it.",
+      "base_income": 3500,
+      "upkeep": 1000,
+      "tier_2_cost": 250000,
+      "tier_3_cost": 1250000,
+      "min_rep": 7,
+      "max_tier": 3
+    },
+    {
+      "id": "investment_firm",
+      "name": "Investment Firm",
+      "district": 4,
+      "description": "Managing other people's money. The Analyst approves.",
+      "base_income": 5000,
+      "upkeep": 1500,
+      "tier_2_cost": 500000,
+      "tier_3_cost": 2500000,
+      "min_rep": 8,
+      "max_tier": 3
+    }
+  ]
+}

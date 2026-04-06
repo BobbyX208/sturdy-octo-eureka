@@ -1,0 +1,94 @@
+{
+  "companies": [
+    {
+      "id": "chen_enterprises",
+      "name": "Chen Enterprises",
+      "sector": "retail",
+      "description": "Ms. Chen's retail empire. Stable. Boring. Profitable.",
+      "base_price": 500,
+      "volatility": 0.15,
+      "sector_news_weight": 0.4
+    },
+    {
+      "id": "industrial_steel",
+      "name": "Industrial Steel",
+      "sector": "manufacturing",
+      "description": "Marco's operation. Moves when the city builds.",
+      "base_price": 350,
+      "volatility": 0.22,
+      "sector_news_weight": 0.5
+    },
+    {
+      "id": "strip_entertainment",
+      "name": "Strip Entertainment",
+      "sector": "entertainment",
+      "description": "Lucky Lou's casino network. Rides on tourism and luck.",
+      "base_price": 800,
+      "volatility": 0.28,
+      "sector_news_weight": 0.6
+    },
+    {
+      "id": "shadow_holdings",
+      "name": "Shadow Holdings",
+      "sector": "black_market",
+      "description": "Ghost's network. Impossible to trace. Moves when the underground stirs.",
+      "base_price": 600,
+      "volatility": 0.35,
+      "sector_news_weight": 0.7
+    },
+    {
+      "id": "simora_bank",
+      "name": "Simora Bank",
+      "sector": "finance",
+      "description": "The Broker's institution. Boring. Immovable. Safe.",
+      "base_price": 1000,
+      "volatility": 0.12,
+      "sector_news_weight": 0.3
+    },
+    {
+      "id": "tech_core",
+      "name": "Tech Core",
+      "sector": "technology",
+      "description": "Downtown startups. High risk. High reward.",
+      "base_price": 450,
+      "volatility": 0.32,
+      "sector_news_weight": 0.65
+    },
+    {
+      "id": "slums_renewal",
+      "name": "Slums Renewal",
+      "sector": "real_estate",
+      "description": "Gentrification moves slow. But it moves.",
+      "base_price": 200,
+      "volatility": 0.18,
+      "sector_news_weight": 0.45
+    },
+    {
+      "id": "district_logistics",
+      "name": "District Logistics",
+      "sector": "transport",
+      "description": "Moves goods across all six districts. Always needed.",
+      "base_price": 550,
+      "volatility": 0.2,
+      "sector_news_weight": 0.5
+    },
+    {
+      "id": "heist_insurance",
+      "name": "Heist Insurance",
+      "sector": "insurance",
+      "description": "Pays out when things get stolen. Irony not lost.",
+      "base_price": 400,
+      "volatility": 0.25,
+      "sector_news_weight": 0.55
+    },
+    {
+      "id": "faction_warfare",
+      "name": "Faction Warfare",
+      "sector": "defense",
+      "description": "Weapons and security. Profits when districts fight.",
+      "base_price": 750,
+      "volatility": 0.38,
+      "sector_news_weight": 0.7
+    }
+  ]
+}

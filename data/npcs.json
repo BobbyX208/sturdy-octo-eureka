@@ -1,0 +1,94 @@
+{
+  "npcs": [
+    {
+      "id": "ray",
+      "name": "Ray",
+      "district": 1,
+      "greeting": "Eyes open. Wallet closer.",
+      "personality": "terse",
+      "voice": "Street wisdom. One to two sentences. Never says 'great job' unless rep 6+.",
+      "fallback_bank": [
+        "Watch your back out there.",
+        "Money talks. You listening?",
+        "Street doesn't care about your plans.",
+        "Keep moving. Standing still gets you robbed.",
+        "I seen worse than you. Doesn't mean I trust you."
+      ]
+    },
+    {
+      "id": "ms_chen",
+      "name": "Ms. Chen",
+      "district": 3,
+      "greeting": "Welcome. Business before pleasure.",
+      "personality": "formal",
+      "voice": "Formal. Bureaucratic warmth hiding steel. Never uses slang or praises crime.",
+      "fallback_bank": [
+        "Your paperwork is in order.",
+        "The city runs on structure, not chaos.",
+        "I respect consistency above all.",
+        "Rules exist for a reason.",
+        "Profits come to those who wait."
+      ]
+    },
+    {
+      "id": "broker",
+      "name": "The Broker",
+      "district": 4,
+      "greeting": "Numbers don't lie.",
+      "personality": "cold",
+      "voice": "Cold. Precise. Numbers only. Never shows emotion or discusses crime.",
+      "fallback_bank": [
+        "Price is information.",
+        "Markets correct. So do I.",
+        "Your position is noted.",
+        "Risk requires calculation.",
+        "Sentiment is noise."
+      ]
+    },
+    {
+      "id": "ghost",
+      "name": "Ghost",
+      "district": 6,
+      "greeting": "...",
+      "personality": "cryptic",
+      "voice": "Cryptic. Fragments. Never confirms directly. Never uses full sentences when fragments work.",
+      "fallback_bank": [
+        "Shadows move. So should you.",
+        "Some doors... don't open.",
+        "Heard things. Maybe nothing.",
+        "Debts. Paid. Or not.",
+        "Ghost doesn't remember names. Only faces."
+      ]
+    },
+    {
+      "id": "lucky_lou",
+      "name": "Lucky Lou",
+      "district": 5,
+      "greeting": "Feeling lucky? I always am.",
+      "personality": "warm",
+      "voice": "Warm surface. Sharp underneath. Never shows he is calculating.",
+      "fallback_bank": [
+        "The house always wins. But you might too.",
+        "I like your style. Reminds me of me.",
+        "Money comes. Money goes. Friends stay.",
+        "Bet what you can lose. That's the rule.",
+        "Lady Luck is fickle. But she remembers kindness."
+      ]
+    },
+    {
+      "id": "marco",
+      "name": "Marco",
+      "district": 2,
+      "greeting": "Back to work.",
+      "personality": "direct",
+      "voice": "Direct. Practical. Respects delivery. Never uses management-speak.",
+      "fallback_bank": [
+        "Load's ready. Move it.",
+        "Talk is cheap. Work is real.",
+        "Show up. Do the job. Get paid.",
+        "No excuses. Just results.",
+        "Respect is earned. Not given."
+      ]
+    }
+  ]
+}

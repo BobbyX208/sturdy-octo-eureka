@@ -1,0 +1,125 @@
+{
+  "jobs": [
+    {
+      "id": "street_cleaner",
+      "name": "Street Cleaner",
+      "district": 1,
+      "description": "Keeping the Slums clean. Honest work, but the locals barely notice.",
+      "base_pay": 50,
+      "hire_chance": 0.95,
+      "passive_income": 25,
+      "min_rep": 0,
+      "cooldown": 3600
+    },
+    {
+      "id": "delivery_driver",
+      "name": "Delivery Driver",
+      "district": 2,
+      "description": "Moving goods across Industrial district. The pay is decent if you don't crash.",
+      "base_pay": 80,
+      "hire_chance": 0.90,
+      "passive_income": 40,
+      "min_rep": 0,
+      "cooldown": 3600
+    },
+    {
+      "id": "security_guard",
+      "name": "Security Guard",
+      "district": 2,
+      "description": "Watching warehouses at night. Boring but steady.",
+      "base_pay": 100,
+      "hire_chance": 0.85,
+      "passive_income": 50,
+      "min_rep": 1,
+      "cooldown": 3600
+    },
+    {
+      "id": "cashier",
+      "name": "Cashier",
+      "district": 3,
+      "description": "Working retail in Downtown. Ms. Chen owns half the stores here.",
+      "base_pay": 70,
+      "hire_chance": 0.90,
+      "passive_income": 35,
+      "min_rep": 0,
+      "cooldown": 3600
+    },
+    {
+      "id": "warehouse_worker",
+      "name": "Warehouse Worker",
+      "district": 2,
+      "description": "Lifting boxes and loading trucks. Marco respects hard work.",
+      "base_pay": 90,
+      "hire_chance": 0.85,
+      "passive_income": 45,
+      "min_rep": 1,
+      "cooldown": 3600
+    },
+    {
+      "id": "office_clerk",
+      "name": "Office Clerk",
+      "district": 3,
+      "description": "Paperwork and coffee runs. The first step up from the streets.",
+      "base_pay": 120,
+      "hire_chance": 0.80,
+      "passive_income": 60,
+      "min_rep": 2,
+      "cooldown": 3600
+    },
+    {
+      "id": "bartender",
+      "name": "Bartender",
+      "district": 5,
+      "description": "Serving drinks on The Strip. Lou watches everyone who works here.",
+      "base_pay": 110,
+      "hire_chance": 0.85,
+      "passive_income": 55,
+      "min_rep": 2,
+      "cooldown": 3600
+    },
+    {
+      "id": "junior_dev",
+      "name": "Junior Developer",
+      "district": 3,
+      "description": "Writing code for downtown startups. Pays well but demanding.",
+      "base_pay": 150,
+      "hire_chance": 0.70,
+      "passive_income": 75,
+      "min_rep": 3,
+      "cooldown": 3600
+    },
+    {
+      "id": "trader",
+      "name": "Floor Trader",
+      "district": 4,
+      "description": "Buying and selling on the exchange floor. The Broker is always watching.",
+      "base_pay": 200,
+      "hire_chance": 0.60,
+      "passive_income": 100,
+      "min_rep": 4,
+      "cooldown": 3600
+    },
+    {
+      "id": "analyst",
+      "name": "Financial Analyst",
+      "district": 4,
+      "description": "Crunching numbers for hedge funds. Cold. Precise. Profitable.",
+      "base_pay": 250,
+      "hire_chance": 0.55,
+      "passive_income": 125,
+      "min_rep": 5,
+      "cooldown": 3600
+    },
+    {
+      "id": "manager",
+      "name": "District Manager",
+      "district": 3,
+      "description": "Running operations across Downtown. The city notices you now.",
+      "base_pay": 300,
+      "hire_chance": 0.50,
+      "passive_income": 150,
+      "min_rep": 6,
+      "cooldown": 3600
+    }
+  ]
+}

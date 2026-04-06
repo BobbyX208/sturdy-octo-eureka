@@ -1,0 +1,103 @@
+{
+  "beats": [
+    {
+      "id": "first_work",
+      "trigger": "first_work_completed",
+      "title": "Your First Paycheck",
+      "content": "Your first honest SimCoin. Ray spots you counting it. 'Don't spend it all in one place. Actually... spend it. Money moves the city.'",
+      "delay_seconds": 30,
+      "requires_dm": true
+    },
+    {
+      "id": "first_crime",
+      "trigger": "first_crime_attempted",
+      "title": "Crossing the Line",
+      "content": "The streets notice. Ghost's voice echoes in your head: 'Some doors... don't open back.' Your reputation shifts.",
+      "delay_seconds": 30,
+      "requires_dm": true
+    },
+    {
+      "id": "rep_3",
+      "trigger": "rep_milestone",
+      "trigger_value": 500,
+      "title": "Known Quantity",
+      "content": "People start recognizing your name. Ms. Chen nods when you pass. 'Keep this trajectory. The city watches.'",
+      "delay_seconds": 0,
+      "requires_dm": true
+    },
+    {
+      "id": "rep_5",
+      "trigger": "rep_milestone",
+      "trigger_value": 2500,
+      "title": "City Influencer",
+      "content": "The Broker sends you a cold message: 'Your volume is noted. Continue.' In Broker terms, that's a compliment.",
+      "delay_seconds": 0,
+      "requires_dm": true
+    },
+    {
+      "id": "rep_8",
+      "trigger": "rep_milestone",
+      "trigger_value": 25000,
+      "title": "Legend Status",
+      "content": "Lucky Lou buys you a drink. 'Heard about you. Knew you'd make it. Don't forget where you started.'",
+      "delay_seconds": 0,
+      "requires_dm": true
+    },
+    {
+      "id": "first_business",
+      "trigger": "business_opened",
+      "title": "Business Owner",
+      "content": "Ms. Chen personally inspects your new venture. 'This city was built by people like you. Don't waste it.'",
+      "delay_seconds": 60,
+      "requires_dm": true
+    },
+    {
+      "id": "first_stock",
+      "trigger": "first_stock_purchase",
+      "title": "Shareholder",
+      "content": "The Broker's voice crackles through your terminal. 'Now you're in the game. Don't blink.'",
+      "delay_seconds": 30,
+      "requires_dm": true
+    },
+    {
+      "id": "first_faction",
+      "trigger": "faction_joined",
+      "title": "Crew Member",
+      "content": "Your new faction welcomes you. Ghost whispers: 'Family now. Family protects. Family demands.'",
+      "delay_seconds": 30,
+      "requires_dm": true
+    },
+    {
+      "id": "faction_leader",
+      "trigger": "faction_created",
+      "title": "Crew Leader",
+      "content": "Your faction charter is filed. Marco shakes your hand. 'You're running things now. Don't mess it up.'",
+      "delay_seconds": 0,
+      "requires_dm": true
+    },
+    {
+      "id": "first_heist",
+      "trigger": "heist_completed",
+      "title": "The Big Score",
+      "content": "The crew splits the take. Lucky Lou appears from nowhere. 'Knew you had it in you. Drinks on me.'",
+      "delay_seconds": 60,
+      "requires_dm": true
+    },
+    {
+      "id": "jail_first",
+      "trigger": "first_jail",
+      "title": "Holding Cell",
+      "content": "Ray's voice echoes through the bars. 'Told you. Eyes open. Now you learn the hard way.'",
+      "delay_seconds": 300,
+      "requires_dm": true
+    },
+    {
+      "id": "prestige_1",
+      "trigger": "prestige_achieved",
+      "title": "New Beginning",
+      "content": "The city blurs. When vision clears, you're back where you started. But different. 'Welcome back.' — Ghost",
+      "delay_seconds": 0,
+      "requires_dm": true
+    }
+  ]
+}
