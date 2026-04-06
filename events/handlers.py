@@ -68,14 +68,13 @@ class EventHandlers:
         
         self.logger.info(f"Player created: {username} ({user_id})")
         
-        if self.bot.services and self.bot.services.ai:
-            channel = await self.bot.fetch_user(user_id)
-            if channel:
-                await channel.send(
-                    f"Welcome to Simora City, {username}!\n"
-                    f"Start your journey with /work in any server, or /travel to explore the districts.\n"
-                    f"Ray says: 'Eyes open. Wallet closer.'"
-                )
+        channel = await self.bot.fetch_user(user_id)
+        if channel:
+            await channel.send(
+                f"Welcome to Simora City, {username}!\n"
+                f"Start your journey with /work in any server, or /travel to explore the districts.\n"
+                f"Ray says: 'Eyes open. Wallet closer.'"
+            )
         
         await self.bot.event_bus.fire("story_beat.check", {"user_id": user_id, "beat": "first_work"})
     
@@ -86,15 +85,18 @@ class EventHandlers:
         
         self.logger.info(f"Player {user_id} reached rank {new_rank}: {new_title}")
         
-        if self.bot.services and self.bot.services.image:
-            card = await self.bot.services.image.generate_rank_up_card(user_id, new_rank, new_title)
-            
-            channel = await self.bot.fetch_user(user_id)
-            if channel:
-                await channel.send(
-                    f"🎉 **Rank Up!** You are now {new_title} (Rank {new_rank})",
-                    file=card
-                )
+        if self.bot.ctx:
+            player_result = await self.bot.ctx.get_player(user_id)
+            if player_result.get("success"):
+                player_data = player_result.get("data", {})
+                card = await self.bot.ctx.get_profile_card(player_data)
+                
+                channel = await self.bot.fetch_user(user_id)
+                if channel and card:
+                    await channel.send(
+                        f"🎉 **Rank Up!** You are now {new_title} (Rank {new_rank})",
+                        file=card
+                    )
         
         await self.bot.event_bus.fire("story_beat.check", {"user_id": user_id, "beat": "rep_milestone", "value": data.get("reputation")})
     
@@ -104,16 +106,19 @@ class EventHandlers:
         
         self.logger.info(f"Player {user_id} prestiged to level {prestige_level}")
         
-        if self.bot.services and self.bot.services.image:
-            card = await self.bot.services.image.generate_prestige_card(user_id, prestige_level)
-            
-            channel = await self.bot.fetch_user(user_id)
-            if channel:
-                await channel.send(
-                    f"✨ **PRESTIGE {prestige_level}** ✨\n"
-                    f"You have been reborn. The city remembers. Ghost whispers: 'Welcome back.'",
-                    file=card
-                )
+        if self.bot.ctx:
+            player_result = await self.bot.ctx.get_player(user_id)
+            if player_result.get("success"):
+                player_data = player_result.get("data", {})
+                card = await self.bot.ctx.get_profile_card(player_data)
+                
+                channel = await self.bot.fetch_user(user_id)
+                if channel and card:
+                    await channel.send(
+                        f"✨ **PRESTIGE {prestige_level}** ✨\n"
+                        f"You have been reborn. The city remembers. Ghost whispers: 'Welcome back.'",
+                        file=card
+                    )
         
         await self.bot.event_bus.fire("story_beat.check", {"user_id": user_id, "beat": "prestige_achieved"})
     
@@ -124,7 +129,7 @@ class EventHandlers:
         
         self.logger.debug(f"Job completed: {user_id} earned {reward} from {job_id}")
         
-        if self.bot.services and self.bot.services.ai and data.get("npc_line"):
+        if data.get("npc_line"):
             channel = await self.bot.fetch_user(user_id)
             if channel:
                 await channel.send(data.get("npc_line"))
@@ -424,15 +429,15 @@ class EventHandlers:
         beat = data.get("beat")
         value = data.get("value")
         
-        if self.bot.services and self.bot.services.world:
-            await self.bot.services.world.check_story_beat(user_id, beat, value)
+        if self.bot.ctx and hasattr(self.bot.ctx, 'services') and self.bot.ctx.services.world:
+            await self.bot.ctx.services.world.check_story_beat(user_id, beat, value)
     
     async def on_city_feed_post(self, data: Dict[str, Any], event_id: str = None) -> None:
         event_type = data.get("event_type")
         content = data.get("content")
         
-        if self.bot.services and self.bot.services.world:
-            await self.bot.services.world.post_to_city_feed(event_type, content)
+        if self.bot.ctx and hasattr(self.bot.ctx, 'services') and self.bot.ctx.services.world:
+            await self.bot.ctx.services.world.post_to_city_feed(event_type, content)
     
     async def close(self) -> None:
         self.logger.info("Event handlers closed")

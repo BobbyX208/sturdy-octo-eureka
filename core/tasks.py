@@ -102,10 +102,10 @@ class BackgroundTaskManager:
             try:
                 await asyncio.sleep(3600)
                 
-                if not self.bot.services or not self.bot.services.investment:
+                if not self.bot.ctx or not self.bot.ctx.services.investment:
                     continue
                 
-                await self.bot.services.investment.process_gbm_tick()
+                await self.bot.ctx.services.investment.process_gbm_tick()
                 self.logger.info("GBM stock tick completed")
                 
             except asyncio.CancelledError:
@@ -119,10 +119,10 @@ class BackgroundTaskManager:
             try:
                 await asyncio.sleep(21600)
                 
-                if not self.bot.services or not self.bot.services.ai:
+                if not self.bot.ctx or not self.bot.ctx.services.ai:
                     continue
                 
-                headlines = await self.bot.services.ai.generate_market_headlines()
+                headlines = await self.bot.ctx.services.ai.generate_market_headlines()
                 
                 async with self.bot.db.pool.acquire() as conn:
                     for headline in headlines:
@@ -146,10 +146,10 @@ class BackgroundTaskManager:
             try:
                 await asyncio.sleep(14400)
                 
-                if not self.bot.services or not self.bot.services.business:
+                if not self.bot.ctx or not self.bot.ctx.services.business:
                     continue
                 
-                await self.bot.services.business.collect_all_income()
+                await self.bot.ctx.services.business.collect_all_income()
                 self.logger.info("Business income collection completed")
                 
             except asyncio.CancelledError:
@@ -296,10 +296,10 @@ class BackgroundTaskManager:
                 
                 await asyncio.sleep(seconds_until)
                 
-                if not self.bot.services or not self.bot.services.world:
+                if not self.bot.ctx or not self.bot.ctx.services.world:
                     continue
                 
-                gazette = await self.bot.services.world.generate_weekly_gazette()
+                gazette = await self.bot.ctx.services.world.generate_weekly_gazette()
                 
                 async with self.bot.db.pool.acquire() as conn:
                     await conn.execute("""
@@ -315,6 +315,7 @@ class BackgroundTaskManager:
             except Exception as e:
                 self.logger.error(f"Weekly gazette generation failed: {e}")
                 await asyncio.sleep(3600)
+
     
     async def _weekly_challenge_reset(self) -> None:
         while self._running:
