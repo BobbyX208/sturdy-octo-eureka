@@ -265,3 +265,234 @@ class EconomyService:
         except Exception as e:
             self.logger.error(f"Transfer failed: {e}")
             raise
+
+    async def apply_job(self, user_id: int, job_id: str) -> Dict[str, Any]:
+        """Apply for a job."""
+        try:
+            player = await self.player_queries.get(user_id)
+            
+            if not player:
+                return {"success": False, "message": "Player not found. Use /start first."}
+            
+            if player.get("is_jailed", False):
+                return {"success": False, "message": "You are in jail and cannot apply for jobs."}
+            
+            job_config = GameConstants.JOB_BASE_PAY.get(job_id)
+            if not job_config:
+                return {"success": False, "message": "Job does not exist."}
+            
+            required_rep = GameConstants.JOB_HIRE_CHANCE.get(job_id, 0.5)
+            required_rep_val = 0
+            if job_id == "manager":
+                required_rep_val = 1000
+            elif job_id == "analyst":
+                required_rep_val = 500
+            elif job_id == "trader":
+                required_rep_val = 300
+            
+            if player.get("reputation", 0) < required_rep_val:
+                return {"success": False, "message": f"Requires {required_rep_val} reputation for this job."}
+            
+            active_jobs = await self.job_queries.get_active_jobs(user_id)
+            max_jobs = self.premium_domain.get_max_jobs(self.premium_domain.get_effective_tier(player))
+            
+            if len(active_jobs) >= max_jobs:
+                return {"success": False, "message": f"You already have the maximum of {max_jobs} jobs."}
+            
+            await self.job_queries.hire(user_id, job_id)
+            
+            await self.event_bus.fire("job.hired", {
+                "user_id": user_id,
+                "job_id": job_id,
+                "npc_name": "Ray",
+                "npc_line": f"Welcome aboard, {player.get('username', 'player')}. Don't mess up."
+            })
+            
+            return {
+                "success": True,
+                "message": f"You have been hired as {job_id}!",
+                "job_id": job_id
+            }
+            
+        except Exception as e:
+            self.logger.error(f"Apply job failed for {user_id}: {e}")
+            raise
+
+    async def quit_job(self, user_id: int, job_id: str) -> Dict[str, Any]:
+        """Quit a job."""
+        try:
+            player = await self.player_queries.get(user_id)
+            
+            if not player:
+                return {"success": False, "message": "Player not found."}
+            
+            active_jobs = await self.job_queries.get_active_jobs(user_id)
+            job_exists = any(j["job_id"] == job_id for j in active_jobs)
+            
+            if not job_exists:
+                return {"success": False, "message": "You don't have this job."}
+            
+            await self.job_queries.quit(user_id, job_id)
+            
+            await self.event_bus.fire("job.quit", {
+                "user_id": user_id,
+                "job_id": job_id,
+                "npc_line": f"You quit {job_id}. The city will remember."
+            })
+            
+            return {
+                "success": True,
+                "message": f"You have quit {job_id}.",
+                "job_id": job_id
+            }
+            
+        except Exception as e:
+            self.logger.error(f"Quit job failed for {user_id}: {e}")
+            raise
+
+    async def gamble(self, user_id: int, game: str, amount: int) -> Dict[str, Any]:
+        """Gamble SC on a game."""
+        try:
+            player = await self.player_queries.get(user_id)
+            
+            if not player:
+                return {"success": False, "message": "Player not found."}
+            
+            if player.get("is_jailed", False):
+                return {"success": False, "message": "You are in jail and cannot gamble."}
+            
+            if amount <= 0:
+                return {"success": False, "message": "Amount must be positive."}
+            
+            if player.get("wallet", 0) < amount:
+                return {"success": False, "message": f"Insufficient funds. You have {player.get('wallet', 0)} SC."}
+            
+            daily_gambled = player.get("daily_gambled", 0)
+            if daily_gambled + amount > GameConstants.MAX_DAILY_GAMBLED:
+                return {"success": False, "message": f"Daily gambling limit reached. Max {GameConstants.MAX_DAILY_GAMBLED} SC per day."}
+            
+            cooldown_active = await self.cooldowns.is_active(user_id, "gamble")
+            if cooldown_active:
+                remaining = await self.cooldowns.get_remaining(user_id, "gamble")
+                return {"success": False, "message": f"Gambling cooldown active. Try again in {remaining} seconds."}
+            
+            game_config = GameConstants.GAMBLING_GAMES.get(game)
+            if not game_config:
+                return {"success": False, "message": "Invalid game. Choose: slots, blackjack, dice, roulette"}
+            
+            from utils.luck import Luck
+            luck = Luck()
+            
+            if game == "slots":
+                won, payout_multiplier, outcome_detail = self._play_slots(luck)
+            elif game == "dice":
+                won, payout_multiplier, outcome_detail = self._play_dice(luck, game_config)
+            elif game == "roulette":
+                won, payout_multiplier, outcome_detail = self._play_roulette(luck, game_config)
+            elif game == "blackjack":
+                won, payout_multiplier, outcome_detail = self._play_blackjack(luck, game_config)
+            else:
+                return {"success": False, "message": "Game not implemented."}
+            
+            if won:
+                amount_won = int(amount * payout_multiplier)
+                net = amount_won - amount
+                await self.player_queries.update_balance(user_id, wallet_delta=amount_won)
+                await self.player_queries.add_transaction(
+                    user_id, amount_won, player.get("wallet", 0) + amount_won,
+                    "gamble_win", f"Won {amount_won} SC playing {game}"
+                )
+            else:
+                amount_won = 0
+                net = -amount
+                await self.player_queries.update_balance(user_id, wallet_delta=-amount)
+                await self.player_queries.add_transaction(
+                    user_id, -amount, player.get("wallet", 0) - amount,
+                    "gamble_loss", f"Lost {amount} SC playing {game}"
+                )
+            
+            await self.player_queries.increment_daily_stats(user_id, gambled=amount)
+            await self.cooldowns.set(user_id, "gamble", 30)
+            
+            return {
+                "success": True,
+                "game": game,
+                "won": won,
+                "amount_bet": amount,
+                "amount_won": amount_won,
+                "net": net,
+                "new_wallet": player.get("wallet", 0) + (amount_won if won else -amount),
+                "outcome_detail": outcome_detail
+            }
+            
+        except Exception as e:
+            self.logger.error(f"Gamble failed for {user_id}: {e}")
+            raise
+
+    def _play_slots(self, luck) -> tuple:
+        """Slots game logic."""
+        symbols = ["🍒", "🍒", "🍒", "🍋", "🍋", "7️⃣", "7️⃣", "🎰", "🎰", "💎"]
+        reels = [luck.weighted_choice(symbols, [0.3, 0.3, 0.2, 0.1, 0.1]) for _ in range(3)]
+        outcome = " ".join(reels)
+        
+        if reels[0] == reels[1] == reels[2]:
+            if reels[0] == "💎":
+                return True, 50.0, f"🎰 JACKPOT! {outcome} (50x)"
+            elif reels[0] == "7️⃣":
+                return True, 10.0, f"🎰 {outcome} (10x)"
+            elif reels[0] == "🎰":
+                return True, 5.0, f"🎰 {outcome} (5x)"
+            else:
+                return True, 3.0, f"🎰 {outcome} (3x)"
+        elif reels[0] == reels[1] or reels[1] == reels[2]:
+            return True, 1.5, f"🎰 {outcome} (1.5x)"
+        
+        return False, 0.0, f"🎰 {outcome} - Nothing"
+
+    def _play_dice(self, luck, game_config) -> tuple:
+        """Dice game logic."""
+        player_roll = luck.roll_dice(6)
+        house_roll = luck.roll_dice(6)
+        
+        if player_roll > house_roll:
+            multiplier_range = game_config.get("multiplier_range", (1.5, 8.0))
+            multiplier = luck.random_float(multiplier_range[0], multiplier_range[1])
+            return True, multiplier, f"🎲 You rolled {player_roll}, House rolled {house_roll} ({multiplier}x)"
+        elif player_roll < house_roll:
+            return False, 0.0, f"🎲 You rolled {player_roll}, House rolled {house_roll} - Lost"
+        else:
+            return False, 0.0, f"🎲 You rolled {player_roll}, House rolled {house_roll} - Push (lost)"
+
+    def _play_roulette(self, luck, game_config) -> tuple:
+        """Roulette game logic."""
+        bet_type = "red"
+        numbers = list(range(37))
+        winning = luck.weighted_choice(numbers, [1/37] * 37)
+        
+        payout = game_config.get("payouts", {}).get(bet_type, 1.8)
+        
+        if bet_type == "red" and winning in [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]:
+            return True, payout, f"🎰 Ball landed on {winning} (Red) - {payout}x"
+        elif bet_type == "black" and winning in [2,4,6,8,10,11,13,15,17,20,22,24,26,28,29,31,33,35]:
+            return True, payout, f"🎰 Ball landed on {winning} (Black) - {payout}x"
+        else:
+            return False, 0.0, f"🎰 Ball landed on {winning} - Lost"
+
+    def _play_blackjack(self, luck, game_config) -> tuple:
+        """Blackjack game logic."""
+        player_hand = [luck.random_range(1, 11), luck.random_range(1, 11)]
+        dealer_hand = [luck.random_range(1, 11), luck.random_range(1, 11)]
+        
+        player_total = sum(player_hand)
+        dealer_total = sum(dealer_hand)
+        
+        if player_total == 21 and len(player_hand) == 2:
+            return True, 2.5, f"🃏 Blackjack! Player: {player_total}, Dealer: {dealer_total} (2.5x)"
+        elif player_total > 21:
+            return False, 0.0, f"🃏 Bust! Player: {player_total}, Dealer: {dealer_total}"
+        elif dealer_total > 21 or player_total > dealer_total:
+            return True, 2.0, f"🃏 You win! Player: {player_total}, Dealer: {dealer_total} (2x)"
+        elif player_total < dealer_total:
+            return False, 0.0, f"🃏 You lose! Player: {player_total}, Dealer: {dealer_total}"
+        else:
+            return False, 0.0, f"🃏 Push! Player: {player_total}, Dealer: {dealer_total}"

@@ -58,7 +58,10 @@ class PlayerService:
             
             row = await self.queries.create(discord_id, username, referrer_id)
             
+            await self.queries.update_balance(discord_id, wallet_delta=5000)
+            
             player = dict(row)
+            player["wallet"] = 5000
             
             cache_key = self.cache.generate_key("player", discord_id)
             await self.cache.set(cache_key, player, ttl=300)
@@ -519,7 +522,7 @@ class PlayerService:
                 rows = await conn.fetch(
                     """SELECT discord_id, rank, net_worth 
                     FROM leaderboard_snapshots 
-                    WHERE snapshot_date >= NOW() - INTERVAL '$1 weeks'
+                    WHERE snapshot_date >= NOW() - INTERVAL '1 week' * $1
                     ORDER BY snapshot_date DESC LIMIT 100""",
                     weeks_ago
                 )

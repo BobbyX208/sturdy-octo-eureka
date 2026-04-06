@@ -234,3 +234,37 @@ class WorldService:
         except Exception as e:
             self.logger.error(f"Get active challenges failed: {e}")
             return []
+
+    async def travel(self, user_id: int, target_district: int) -> Dict[str, Any]:
+        """Travel to a district."""
+        try:
+            from services.player_service import PlayerService
+            player_service = PlayerService(self.db, self.cache, self.event_bus)
+            success, message = await player_service.travel(user_id, target_district)
+            
+            if not success:
+                return {"success": False, "message": message}
+            
+            player = await player_service.get(user_id)
+            
+            npc_map = {1: "ray", 2: "marco", 3: "chen", 4: "broker", 5: "lou", 6: "ghost"}
+            npc_id = npc_map.get(target_district, "ray")
+            
+            greeting = await self.ai_service.generate_npc_line(
+                npc_id,
+                player or {},
+                f"Player just arrived in district {target_district}. Welcome them briefly."
+            )
+            
+            return {
+                "success": True,
+                "new_district": target_district,
+                "district_name": Config.DISTRICTS[target_district - 1]["name"] if target_district <= len(Config.DISTRICTS) else "Unknown",
+                "npc_greeting": greeting,
+                "active_events": [],
+                "travel_cost": 0
+            }
+            
+        except Exception as e:
+            self.logger.error(f"Travel failed for {user_id}: {e}")
+            return {"success": False, "message": "Travel failed."}
