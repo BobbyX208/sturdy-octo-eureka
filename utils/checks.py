@@ -12,18 +12,20 @@ def requires_profile():
         bot = interaction.client
         user_id = interaction.user.id
         
-        if not hasattr(bot, "services") or not bot.services:
+        if not hasattr(bot, "ctx") or not bot.ctx:
             await interaction.response.send_message("Bot not ready. Try again.", ephemeral=True)
             return False
         
-        player = await bot.services.player.get(user_id)
+        result = await bot.ctx.get_player(user_id)
         
-        if not player:
+        if not result.get("success"):
             await interaction.response.send_message(
                 "You need to register first! Use `/start` to begin your journey in Simora City.",
                 ephemeral=True
             )
             return False
+        
+        player = result.get("data", {})
         
         if player.get("is_banned", False):
             await interaction.response.send_message(
@@ -33,7 +35,6 @@ def requires_profile():
             return False
         
         if player.get("is_jailed", False):
-            from utils.formatters import format_relative_time
             jail_until = player.get("jail_until")
             if jail_until:
                 remaining = (jail_until - datetime.now(timezone.utc)).total_seconds()
@@ -60,18 +61,20 @@ def requires_premium(tier: str = "resident"):
         bot = interaction.client
         user_id = interaction.user.id
         
-        if not hasattr(bot, "services") or not bot.services:
+        if not hasattr(bot, "ctx") or not bot.ctx:
             await interaction.response.send_message("Bot not ready. Try again.", ephemeral=True)
             return False
         
-        player = await bot.services.player.get(user_id)
+        result = await bot.ctx.get_player(user_id)
         
-        if not player:
+        if not result.get("success"):
             await interaction.response.send_message(
                 "You need to register first! Use `/start` to begin.",
                 ephemeral=True
             )
             return False
+        
+        player = result.get("data", {})
         
         current_tier = player.get("premium_tier", "citizen")
         expires = player.get("premium_expires")
@@ -111,18 +114,20 @@ def requires_rep(min_rep: int):
         bot = interaction.client
         user_id = interaction.user.id
         
-        if not hasattr(bot, "services") or not bot.services:
+        if not hasattr(bot, "ctx") or not bot.ctx:
             await interaction.response.send_message("Bot not ready. Try again.", ephemeral=True)
             return False
         
-        player = await bot.services.player.get(user_id)
+        result = await bot.ctx.get_player(user_id)
         
-        if not player:
+        if not result.get("success"):
             await interaction.response.send_message(
                 "You need to register first! Use `/start` to begin.",
                 ephemeral=True
             )
             return False
+        
+        player = result.get("data", {})
         
         reputation = player.get("reputation", 0)
         
@@ -143,15 +148,17 @@ def requires_staff():
         bot = interaction.client
         user_id = interaction.user.id
         
-        if not hasattr(bot, "services") or not bot.services:
+        if not hasattr(bot, "ctx") or not bot.ctx:
             await interaction.response.send_message("Bot not ready. Try again.", ephemeral=True)
             return False
         
-        player = await bot.services.player.get(user_id)
+        result = await bot.ctx.get_player(user_id)
         
-        if not player:
+        if not result.get("success"):
             await interaction.response.send_message("Player not found.", ephemeral=True)
             return False
+        
+        player = result.get("data", {})
         
         system_role = player.get("system_role", "player")
         
@@ -172,15 +179,17 @@ def requires_dev():
         bot = interaction.client
         user_id = interaction.user.id
         
-        if not hasattr(bot, "services") or not bot.services:
+        if not hasattr(bot, "ctx") or not bot.ctx:
             await interaction.response.send_message("Bot not ready. Try again.", ephemeral=True)
             return False
         
-        player = await bot.services.player.get(user_id)
+        result = await bot.ctx.get_player(user_id)
         
-        if not player:
+        if not result.get("success"):
             await interaction.response.send_message("Player not found.", ephemeral=True)
             return False
+        
+        player = result.get("data", {})
         
         system_role = player.get("system_role", "player")
         
@@ -201,17 +210,19 @@ def not_jailed():
         bot = interaction.client
         user_id = interaction.user.id
         
-        if not hasattr(bot, "services") or not bot.services:
+        if not hasattr(bot, "ctx") or not bot.ctx:
             return True
         
-        player = await bot.services.player.get(user_id)
+        result = await bot.ctx.get_player(user_id)
         
-        if player and player.get("is_jailed", False):
-            await interaction.response.send_message(
-                "You are in jail and cannot use this command.",
-                ephemeral=True
-            )
-            return False
+        if result.get("success"):
+            player = result.get("data", {})
+            if player.get("is_jailed", False):
+                await interaction.response.send_message(
+                    "You are in jail and cannot use this command.",
+                    ephemeral=True
+                )
+                return False
         
         return True
     

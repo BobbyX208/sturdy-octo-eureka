@@ -5,12 +5,13 @@ from datetime import datetime
 import discord
 from discord import Interaction, Embed
 
+
 class DelayedResponse:
     """Utility for cinematic delayed responses with AI-generated tension building"""
     
-    def __init__(self, interaction: Interaction, ai_service, min_delay: float = 2.0, max_delay: float = 4.0):
+    def __init__(self, interaction: Interaction, ctx, min_delay: float = 2.0, max_delay: float = 4.0):
         self.interaction = interaction
-        self.ai_service = ai_service
+        self.ctx = ctx
         self.min_delay = min_delay
         self.max_delay = max_delay
         self._tension_message: Optional[discord.Message] = None
@@ -35,9 +36,9 @@ class DelayedResponse:
         self._player_data = player_data
         self._context = context
         
-        tension_line = await self.ai_service.generate_npc_line(
+        tension_line = await self.ctx.get_npc_line(
             npc_id,
-            player_data,
+            player_data.get("discord_id"),
             f"Tension building moment. {context}. Speak mysteriously, build suspense. 1 sentence."
         )
         
@@ -133,12 +134,13 @@ class DelayedResponse:
         final_elapsed = (datetime.now() - self._start_time).total_seconds()
         return actual_result, final_elapsed
 
+
 class CinematicSequence:
     """Multi-step cinematic sequence for prestige and major events"""
     
-    def __init__(self, interaction: Interaction, ai_service, steps: List[Dict[str, Any]] = None):
+    def __init__(self, interaction: Interaction, ctx, steps: List[Dict[str, Any]] = None):
         self.interaction = interaction
-        self.ai_service = ai_service
+        self.ctx = ctx
         self.steps = steps or []
         self._current_step = 0
         self._message: Optional[discord.Message] = None
@@ -151,9 +153,9 @@ class CinematicSequence:
         if not self.interaction.response.is_done():
             await self.interaction.response.defer(ephemeral=ephemeral)
         
-        first_line = await self.ai_service.generate_npc_line(
+        first_line = await self.ctx.get_npc_line(
             npc_id,
-            player_data,
+            player_data.get("discord_id"),
             f"Cinematic moment. {context}. Speak with weight and gravity. 1 sentence."
         )
         
@@ -187,9 +189,9 @@ class CinematicSequence:
         await asyncio.sleep(step.get("delay", 2.0))
         
         if step.get("ai_npc"):
-            line = await self.ai_service.generate_npc_line(
+            line = await self.ctx.get_npc_line(
                 step["ai_npc"],
-                self._player_data,
+                self._player_data.get("discord_id"),
                 step.get("ai_context", "Cinematic continuation.")
             )
             step["embed"].description = f"*{line}*"
@@ -218,12 +220,13 @@ class CinematicSequence:
             "ai_context": ai_context
         })
 
+
 class NPCDelayedResponse:
     """Handle NPC responses that arrive after main outcome"""
     
-    def __init__(self, interaction: Interaction, ai_service):
+    def __init__(self, interaction: Interaction, ctx):
         self.interaction = interaction
-        self.ai_service = ai_service
+        self.ctx = ctx
         self._sent_lines = []
     
     async def send_line(
@@ -237,9 +240,9 @@ class NPCDelayedResponse:
         """Generate and send AI NPC line after delay"""
         await asyncio.sleep(delay)
         
-        line = await self.ai_service.generate_npc_line(
+        line = await self.ctx.get_npc_line(
             npc_id,
-            player_data,
+            player_data.get("discord_id"),
             context
         )
         
@@ -274,9 +277,9 @@ class NPCDelayedResponse:
         for i, (npc_id, player_data, context) in enumerate(lines):
             await asyncio.sleep(delays[i])
             
-            line = await self.ai_service.generate_npc_line(
+            line = await self.ctx.get_npc_line(
                 npc_id,
-                player_data,
+                player_data.get("discord_id"),
                 context
             )
             
@@ -301,9 +304,9 @@ class NPCDelayedResponse:
     async def replace_last(self, npc_id: str, player_data: Dict[str, Any], context: str) -> None:
         """Replace the last sent NPC message with a new AI-generated one"""
         if self._sent_lines:
-            new_line = await self.ai_service.generate_npc_line(
+            new_line = await self.ctx.get_npc_line(
                 npc_id,
-                player_data,
+                player_data.get("discord_id"),
                 context
             )
             
@@ -317,11 +320,12 @@ class NPCDelayedResponse:
             self._sent_lines[-1]["embed"] = embed
             self._sent_lines[-1]["npc_id"] = npc_id
 
+
 class TensionBuilder:
     """Build AI-generated tension messages for different command types"""
     
-    def __init__(self, ai_service):
-        self.ai_service = ai_service
+    def __init__(self, ctx):
+        self.ctx = ctx
         self._tension_cache = {}
     
     async def get_tension(
@@ -339,9 +343,9 @@ class TensionBuilder:
         
         tension_prompt = f"Tension building moment for {command_type}. {context}. Speak mysteriously, build suspense, be in character. 1 sentence only."
         
-        tension_line = await self.ai_service.generate_npc_line(
+        tension_line = await self.ctx.get_npc_line(
             npc_id,
-            player_data,
+            player_data.get("discord_id"),
             tension_prompt
         )
         
