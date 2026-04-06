@@ -240,6 +240,3 @@ def has_cooldown(action: str, cooldown_seconds: int):
         return True
     
     return discord.app_commands.check(predicate)
-
-# Alias for backward compatibility
-not_in_jail = not_jailed

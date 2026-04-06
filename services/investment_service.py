@@ -53,7 +53,6 @@ class InvestmentService:
                 remaining = await self.cooldowns.get_remaining(user_id, "invest")
                 return {"success": False, "message": f"Investment cooldown active. Try again in {remaining} seconds."}
             
-            # Manual transaction handling
             conn = await self.db.acquire()
             try:
                 await conn.execute("BEGIN")
@@ -127,7 +126,6 @@ class InvestmentService:
             tax = self.economy_rules.calculate_investment_tax(profit) if profit > 0 else 0
             after_tax = total_value - tax
             
-            # Manual transaction handling
             conn = await self.db.acquire()
             try:
                 await conn.execute("BEGIN")
@@ -347,7 +345,6 @@ class InvestmentService:
                 should_release = True
             
             try:
-                # First get the company's sector
                 sector = await conn.fetchval("""
                     SELECT sector FROM companies WHERE id = $1
                 """, company_id)

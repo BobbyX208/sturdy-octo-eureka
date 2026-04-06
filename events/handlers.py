@@ -1,4 +1,3 @@
-# events/handlers.py
 import asyncio
 import logging
 from datetime import datetime, timezone

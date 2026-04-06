@@ -60,11 +60,9 @@ class Config:
     IMAGE_CACHE_TTL_HOURS: int = int(os.getenv("IMAGE_CACHE_TTL_HOURS", "24"))
     IMAGE_THREAD_POOL_SIZE: int = int(os.getenv("IMAGE_THREAD_POOL_SIZE", "4"))
     
-# config/settings.py - Add these lines after DATA_DIR and before OFFICIAL_GUILD_ID
 
     DATA_DIR: str = os.getenv("DATA_DIR", "data/")
     
-    # Game Configuration Constants
     REP_RANKS: list = [
         {"rank": 1, "min_rep": 0, "title": "Newcomer"},
         {"rank": 2, "min_rep": 100, "title": "Recognized"},

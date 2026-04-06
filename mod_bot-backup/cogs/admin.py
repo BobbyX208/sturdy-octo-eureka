@@ -145,7 +145,6 @@ class AdminCog(commands.Cog):
             "admin_deduct", f"Admin deduction: {reason or 'No reason provided'}"
         )
         
-        # Log action
         await self._log_action(
             interaction.guild, 
             interaction.user, 

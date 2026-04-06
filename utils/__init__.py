@@ -7,7 +7,7 @@ from utils.formatters import (
 )
 from utils.checks import (
     requires_profile, requires_premium, requires_rep,
-    requires_staff, requires_dev, not_in_jail, has_cooldown
+    requires_staff, requires_dev, not_jailed, has_cooldown
 )
 from utils.luck import Luck
 

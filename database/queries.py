@@ -612,3 +612,118 @@ class AINPCQueries:
                 DELETE FROM ai_error_log WHERE created_at < NOW() - INTERVAL '7 days'
             """)
             return int(result.split()[-1])
+            
+
+class CrimeQueries:
+    
+    def __init__(self, db: DatabasePool):
+        self.db = db
+    
+    async def log_crime(self, discord_id: int, crime_type: str, success: bool, loot: int, fine: int, jail_hours: int) -> None:
+        async with self.db.pool.acquire() as conn:
+            await conn.execute("""
+                INSERT INTO crime_logs (discord_id, crime_type, success, loot, fine, jail_hours)
+                VALUES ($1, $2, $3, $4, $5, $6)
+            """, discord_id, crime_type, success, loot, fine, jail_hours)
+    
+    async def get_crime_stats(self, discord_id: int) -> asyncpg.Record:
+        async with self.db.pool.acquire() as conn:
+            return await conn.fetchrow("""
+                SELECT 
+                    COUNT(*) as total,
+                    SUM(CASE WHEN success = true THEN 1 ELSE 0 END) as successful
+                FROM crime_logs 
+                WHERE discord_id = $1
+            """, discord_id)
+
+
+class HeistQueries:
+    
+    def __init__(self, db: DatabasePool):
+        self.db = db
+    
+    async def create_heist(self, initiator_id: int, district: int) -> asyncpg.Record:
+        async with self.db.pool.acquire() as conn:
+            return await conn.fetchrow("""
+                INSERT INTO heist_sessions (initiator_id, district, state, created_at)
+                VALUES ($1, $2, 'pending', NOW())
+                RETURNING id
+            """, initiator_id, district)
+    
+    async def add_participant(self, heist_id: int, discord_id: int) -> None:
+        async with self.db.pool.acquire() as conn:
+            await conn.execute("""
+                INSERT INTO heist_participants (heist_id, discord_id)
+                VALUES ($1, $2)
+            """, heist_id, discord_id)
+    
+    async def get_participants(self, heist_id: int) -> List[asyncpg.Record]:
+        async with self.db.pool.acquire() as conn:
+            return await conn.fetch("""
+                SELECT hp.discord_id, p.username
+                FROM heist_participants hp
+                JOIN players p ON p.discord_id = hp.discord_id
+                WHERE hp.heist_id = $1
+            """, heist_id)
+    
+    async def resolve_heist(self, heist_id: int, success: bool, loot: int) -> None:
+        async with self.db.pool.acquire() as conn:
+            await conn.execute("""
+                UPDATE heist_sessions
+                SET state = 'completed', success = $2, loot = $3, resolved_at = NOW()
+                WHERE id = $1
+            """, heist_id, success, loot)
+    
+    async def get_heist_stats(self, discord_id: int) -> asyncpg.Record:
+        async with self.db.pool.acquire() as conn:
+            return await conn.fetchrow("""
+                SELECT 
+                    COUNT(*) as participated,
+                    SUM(CASE WHEN hs.success = true THEN 1 ELSE 0 END) as successful
+                FROM heist_participants hp
+                JOIN heist_sessions hs ON hs.id = hp.heist_id
+                WHERE hp.discord_id = $1
+            """, discord_id)
+
+
+class MarketQueries:
+    
+    def __init__(self, db: DatabasePool):
+        self.db = db
+    
+    async def get_all_companies(self) -> List[asyncpg.Record]:
+        async with self.db.pool.acquire() as conn:
+            return await conn.fetch("""
+                SELECT * FROM companies ORDER BY id
+            """)
+    
+    async def get_company(self, company_id: str) -> Optional[asyncpg.Record]:
+        async with self.db.pool.acquire() as conn:
+            return await conn.fetchrow("""
+                SELECT * FROM companies WHERE id = $1
+            """, company_id)
+    
+    async def get_current_price(self, company_id: str) -> Optional[int]:
+        async with self.db.pool.acquire() as conn:
+            return await conn.fetchval("""
+                SELECT price FROM stock_prices
+                WHERE company_id = $1
+                ORDER BY recorded_at DESC
+                LIMIT 1
+            """, company_id)
+    
+    async def get_price_history(self, company_id: str, days: int = 7) -> List[asyncpg.Record]:
+        async with self.db.pool.acquire() as conn:
+            return await conn.fetch("""
+                SELECT price, recorded_at
+                FROM stock_prices
+                WHERE company_id = $1 AND recorded_at > NOW() - ($2 || ' days')::INTERVAL
+                ORDER BY recorded_at ASC
+            """, company_id, days)
+    
+    async def add_news(self, headline: str, sector: str, modifier: float, direction: str) -> None:
+        async with self.db.pool.acquire() as conn:
+            await conn.execute("""
+                INSERT INTO market_news (headline, sector, modifier, direction, generated_at, expires_at)
+                VALUES ($1, $2, $3, $4, NOW(), NOW() + INTERVAL '24 hours')
+            """, headline, sector, modifier, direction)

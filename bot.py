@@ -28,6 +28,7 @@ from services.faction_service import FactionService
 from services.ai_service import AIService
 from services.image_service import ImageService
 from services.world_service import WorldService
+from middleware.sim_context import SimContext
 
 
 def git_pull():
@@ -241,6 +242,8 @@ class SimCoinBot(commands.Bot):
             
             self.logger.info("Starting background tasks...")
             await self.start_background_tasks()
+
+            self.ctx = SimContext(self.services, self.db, self.cache)
             
             self.logger.info("Bot setup completed successfully")
             

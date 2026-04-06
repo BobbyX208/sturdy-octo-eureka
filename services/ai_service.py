@@ -22,7 +22,6 @@ class AIService:
         self.cache = cache_manager
         self.logger = logging.getLogger("simcoin.services.ai")
         
-        # Initialize Groq
         if groq_key:
             try:
                 import httpx
@@ -34,7 +33,6 @@ class AIService:
         else:
             self.groq_client = None
         
-        # Initialize Gemini
         self.gemini_client = None
         if gemini_key:
             try:
@@ -149,16 +147,13 @@ Recent Interactions:
         memory: List[Dict[str, Any]] = None
     ) -> str:
         try:
-            # CACHE COMPLETELY DISABLED - Every call is fresh
             
             memory = memory or []
             
             prompt = self._build_npc_prompt(npc_id, player_data, context, memory)
             
-            # Add random temperature for variety (0.5 to 1.0)
             temperature = random.uniform(0.5, 1.0)
             
-            # Add random seed to prompt for more variety
             random_seed = random.randint(1, 100)
             prompt = f"[Seed: {random_seed}]\n{prompt}"
             
@@ -178,7 +173,6 @@ Recent Interactions:
     
     async def generate_market_headlines(self) -> List[Dict[str, Any]]:
         try:
-            # CACHE DISABLED - Always fresh
             
             prompt = """Generate 3 fictional market headlines for a cyberpunk city economy.
 Each headline should have:
@@ -199,7 +193,6 @@ Example: [{"headline": "Tech Core Surges on AI Breakthrough", "sector": "technol
             
             if response:
                 try:
-                    # Clean response - remove markdown code blocks if present
                     response = response.strip()
                     if response.startswith("```json"):
                         response = response[7:]
@@ -341,7 +334,6 @@ Return JSON: {{"approved": true/false, "reason": "if not approved"}}"""
             
             if response:
                 try:
-                    # Clean response
                     response = response.strip()
                     if response.startswith("```json"):
                         response = response[7:]
