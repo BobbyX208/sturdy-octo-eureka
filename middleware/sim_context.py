@@ -113,14 +113,14 @@ class SimContext:
                         COUNT(cl.id) FILTER (WHERE cl.succeeded) AS crimes_successful,
                         COUNT(cl.id) FILTER (WHERE NOT cl.succeeded) AS crimes_failed,
                         COUNT(DISTINCT hp.heist_id) AS heists_participated,
-                        COUNT(DISTINCT hp.heist_id) FILTER (WHERE hs.state = 'completed') AS heists_successful,
+                        COUNT(DISTINCT hp.heist_id) FILTER (WHERE hs.state = 'completed' AND hs.success = TRUE) AS heists_successful,
                         COUNT(DISTINCT biz.id) AS businesses_owned,
                         COUNT(DISTINCT inv_log.id) AS stocks_traded,
                         COALESCE(SUM(i.quantity), 0) AS items_owned
                     FROM players p
                     LEFT JOIN crime_logs cl ON cl.discord_id = p.discord_id
-                    LEFT JOIN heist_sessions hp ON hp.initiator_id = p.discord_id
-                    LEFT JOIN heist_sessions hs ON hs.id = hp.id
+                    LEFT JOIN heist_participants hp ON hp.discord_id = p.discord_id
+                    LEFT JOIN heist_sessions hs ON hs.id = hp.heist_id
                     LEFT JOIN businesses biz ON biz.discord_id = p.discord_id AND biz.status = 'active'
                     LEFT JOIN investments inv_log ON inv_log.discord_id = p.discord_id
                     LEFT JOIN inventory i ON i.discord_id = p.discord_id
