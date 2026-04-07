@@ -54,7 +54,7 @@ class PlayerService:
             existing = await self.get(discord_id)
             
             if existing:
-                return existing
+                return {"success": True, "data": existing, "message": "Player already exists."}
             
             row = await self.queries.create(discord_id, username, referrer_id)
             
@@ -77,11 +77,11 @@ class PlayerService:
             
             self.logger.info(f"Created player {username} ({discord_id})")
             
-            return player
+            return {"success": True, "data": player, "message": "Player created successfully."}
             
         except Exception as e:
             self.logger.error(f"Failed to create player {discord_id}: {e}")
-            raise
+            return {"success": False, "data": None, "message": str(e)}
     
     async def _process_referral(self, referrer_id: int, new_user_id: int) -> None:
         try:
