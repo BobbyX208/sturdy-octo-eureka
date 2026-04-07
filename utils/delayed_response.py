@@ -82,7 +82,7 @@ class DelayedResponse:
         *args, 
         **kwargs
     ) -> Tuple[Any, float]:
-        """Run logic while maintaining minimum delay"""
+        """Run logic while maintaining minimum delay - sends result as new message (keeps tension message visible)"""
         if self._start_time is None:
             raise RuntimeError("Must call send_tension before resolve")
         
@@ -99,7 +99,7 @@ class DelayedResponse:
             await asyncio.sleep(remaining_delay)
             actual_result = None
         
-        await self._tension_message.edit(embed=result_embed)
+        await self.interaction.followup.send(embed=result_embed)
         
         final_elapsed = (datetime.now() - self._start_time).total_seconds()
         return actual_result, final_elapsed
@@ -111,7 +111,7 @@ class DelayedResponse:
         *args,
         **kwargs
     ) -> Tuple[Any, float]:
-        """Resolve with random delay between min and max"""
+        """Resolve with random delay between min and max - sends result as new message (keeps tension message visible)"""
         if self._start_time is None:
             raise RuntimeError("Must call send_tension before resolve_with_range")
         
@@ -129,7 +129,7 @@ class DelayedResponse:
             await asyncio.sleep(remaining_delay)
             actual_result = None
         
-        await self._tension_message.edit(embed=result_embed)
+        await self.interaction.followup.send(embed=result_embed)
         
         final_elapsed = (datetime.now() - self._start_time).total_seconds()
         return actual_result, final_elapsed
