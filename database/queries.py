@@ -334,6 +334,13 @@ class FactionQueries:
                 WHERE fm.discord_id = $1 AND f.status = 'active'
             """, discord_id)
     
+    async def get_member(self, faction_id: int, discord_id: int) -> Optional[asyncpg.Record]:
+        async with self.db.pool.acquire() as conn:
+            return await conn.fetchrow("""
+                SELECT * FROM faction_members
+                WHERE faction_id = $1 AND discord_id = $2
+            """, faction_id, discord_id)
+    
     async def add_member(self, faction_id: int, discord_id: int, role: str = "member") -> None:
         async with self.db.pool.acquire() as conn:
             await conn.execute("""
@@ -358,6 +365,35 @@ class FactionQueries:
                 ORDER BY fm.role DESC, p.reputation DESC
             """, faction_id)
     
+    async def get_faction_with_members(self, faction_id: int) -> Optional[Dict[str, Any]]:
+        async with self.db.pool.acquire() as conn:
+            faction = await conn.fetchrow("""
+                SELECT * FROM factions WHERE id = $1 AND status = 'active'
+            """, faction_id)
+            
+            if not faction:
+                return None
+            
+            members = await conn.fetch("""
+                SELECT fm.discord_id, fm.role, fm.joined_at, fm.weekly_contrib,
+                       p.username, p.reputation, p.prestige
+                FROM faction_members fm
+                JOIN players p ON p.discord_id = fm.discord_id
+                WHERE fm.faction_id = $1
+                ORDER BY fm.role DESC, fm.joined_at ASC
+            """, faction_id)
+            
+            districts = await conn.fetch("""
+                SELECT district, controlled_since
+                FROM district_control WHERE faction_id = $1
+            """, faction_id)
+            
+            return {
+                "faction": dict(faction),
+                "members": [dict(m) for m in members],
+                "controlled_districts": [dict(d) for d in districts]
+            }
+    
     async def update_treasury(self, faction_id: int, delta: int) -> None:
         async with self.db.pool.acquire() as conn:
             await conn.execute("""
@@ -379,13 +415,23 @@ class FactionQueries:
             await conn.execute("""
                 UPDATE district_control
                 SET contest_ends = NOW() + ($2 || ' hours')::INTERVAL
-                WHERE district = $1 AND faction_id IS NULL
+                WHERE district = $1
             """, district, hours)
     
     async def get_district_control(self) -> List[asyncpg.Record]:
         async with self.db.pool.acquire() as conn:
             return await conn.fetch("""
                 SELECT dc.*, f.name as faction_name, f.tag
+                FROM district_control dc
+                LEFT JOIN factions f ON f.id = dc.faction_id
+                ORDER BY dc.district
+            """)
+    
+    async def get_faction_control_map(self) -> List[asyncpg.Record]:
+        async with self.db.pool.acquire() as conn:
+            return await conn.fetch("""
+                SELECT dc.district, dc.controlled_since, dc.contest_ends,
+                       f.id as faction_id, f.name as faction_name, f.tag as faction_tag
                 FROM district_control dc
                 LEFT JOIN factions f ON f.id = dc.faction_id
                 ORDER BY dc.district
@@ -422,43 +468,77 @@ class InvestmentQueries:
     def __init__(self, db: DatabasePool):
         self.db = db
     
-    async def buy_shares(self, discord_id: int, company_id: str, shares: int, price: int) -> None:
-        async with self.db.pool.acquire() as conn:
-            async with conn.transaction():
-                await conn.execute("""
-                    INSERT INTO investments (discord_id, company_id, shares, avg_buy_price)
-                    VALUES ($1, $2, $3, $4)
-                    ON CONFLICT (discord_id, company_id) DO UPDATE
-                    SET shares = investments.shares + EXCLUDED.shares,
-                        avg_buy_price = ((investments.shares * investments.avg_buy_price) + (EXCLUDED.shares * EXCLUDED.avg_buy_price)) / (investments.shares + EXCLUDED.shares)
-                """, discord_id, company_id, shares, price)
+    async def buy_shares(self, discord_id: int, company_id: str, shares: int, price: int, connection=None) -> None:
+        if connection:
+            await connection.execute("""
+                INSERT INTO investments (discord_id, company_id, shares, avg_buy_price)
+                VALUES ($1, $2, $3, $4)
+                ON CONFLICT (discord_id, company_id) DO UPDATE
+                SET shares = investments.shares + EXCLUDED.shares,
+                    avg_buy_price = ((investments.shares * investments.avg_buy_price) + (EXCLUDED.shares * EXCLUDED.avg_buy_price)) / (investments.shares + EXCLUDED.shares)
+            """, discord_id, company_id, shares, price)
+        else:
+            async with self.db.pool.acquire() as conn:
+                async with conn.transaction():
+                    await conn.execute("""
+                        INSERT INTO investments (discord_id, company_id, shares, avg_buy_price)
+                        VALUES ($1, $2, $3, $4)
+                        ON CONFLICT (discord_id, company_id) DO UPDATE
+                        SET shares = investments.shares + EXCLUDED.shares,
+                            avg_buy_price = ((investments.shares * investments.avg_buy_price) + (EXCLUDED.shares * EXCLUDED.avg_buy_price)) / (investments.shares + EXCLUDED.shares)
+                    """, discord_id, company_id, shares, price)
     
-    async def sell_shares(self, discord_id: int, company_id: str, shares: int) -> asyncpg.Record:
-        async with self.db.pool.acquire() as conn:
-            async with conn.transaction():
-                investment = await conn.fetchrow("""
-                    SELECT shares, avg_buy_price FROM investments
+    async def sell_shares(self, discord_id: int, company_id: str, shares: int, connection=None) -> asyncpg.Record:
+        if connection:
+            investment = await connection.fetchrow("""
+                SELECT shares, avg_buy_price FROM investments
+                WHERE discord_id = $1 AND company_id = $2
+            """, discord_id, company_id)
+            
+            if not investment or investment["shares"] < shares:
+                return None
+            
+            new_shares = investment["shares"] - shares
+            
+            if new_shares == 0:
+                await connection.execute("""
+                    DELETE FROM investments
                     WHERE discord_id = $1 AND company_id = $2
                 """, discord_id, company_id)
-                
-                if not investment or investment["shares"] < shares:
-                    return None
-                
-                new_shares = investment["shares"] - shares
-                
-                if new_shares == 0:
-                    await conn.execute("""
-                        DELETE FROM investments
+            else:
+                await connection.execute("""
+                    UPDATE investments
+                    SET shares = $3
+                    WHERE discord_id = $1 AND company_id = $2
+                """, discord_id, company_id, new_shares)
+            
+            return investment
+        else:
+            async with self.db.pool.acquire() as conn:
+                async with conn.transaction():
+                    investment = await conn.fetchrow("""
+                        SELECT shares, avg_buy_price FROM investments
                         WHERE discord_id = $1 AND company_id = $2
                     """, discord_id, company_id)
-                else:
-                    await conn.execute("""
-                        UPDATE investments
-                        SET shares = $3
-                        WHERE discord_id = $1 AND company_id = $2
-                    """, discord_id, company_id, new_shares)
-                
-                return investment
+                    
+                    if not investment or investment["shares"] < shares:
+                        return None
+                    
+                    new_shares = investment["shares"] - shares
+                    
+                    if new_shares == 0:
+                        await conn.execute("""
+                            DELETE FROM investments
+                            WHERE discord_id = $1 AND company_id = $2
+                        """, discord_id, company_id)
+                    else:
+                        await conn.execute("""
+                            UPDATE investments
+                            SET shares = $3
+                            WHERE discord_id = $1 AND company_id = $2
+                        """, discord_id, company_id, new_shares)
+                    
+                    return investment
     
     async def get_portfolio(self, discord_id: int) -> List[asyncpg.Record]:
         async with self.db.pool.acquire() as conn:
@@ -482,18 +562,24 @@ class InvestmentQueries:
                 LIMIT 1
             """, company_id)
     
-    async def save_price(self, company_id: str, price: int) -> None:
-        async with self.db.pool.acquire() as conn:
-            await conn.execute("""
+    async def save_price(self, company_id: str, price: int, connection=None) -> None:
+        if connection:
+            await connection.execute("""
                 INSERT INTO stock_prices (company_id, price, recorded_at)
                 VALUES ($1, $2, NOW())
             """, company_id, price)
+        else:
+            async with self.db.pool.acquire() as conn:
+                await conn.execute("""
+                    INSERT INTO stock_prices (company_id, price, recorded_at)
+                    VALUES ($1, $2, NOW())
+                """, company_id, price)
     
-    async def update_sentiment(self, company_id: str, buy_volume: int, sell_volume: int) -> None:
-        async with self.db.pool.acquire() as conn:
-            period_start = datetime.now(timezone.utc).replace(minute=0, second=0, microsecond=0)
-            
-            await conn.execute("""
+    async def update_sentiment(self, company_id: str, buy_volume: int, sell_volume: int, connection=None) -> None:
+        period_start = datetime.now(timezone.utc).replace(minute=0, second=0, microsecond=0)
+        
+        if connection:
+            await connection.execute("""
                 INSERT INTO stock_sentiment (company_id, period_start, buy_volume, sell_volume, net_pressure)
                 VALUES ($1, $2, $3, $4, $3 - $4)
                 ON CONFLICT (company_id, period_start) DO UPDATE
@@ -501,6 +587,16 @@ class InvestmentQueries:
                     sell_volume = stock_sentiment.sell_volume + EXCLUDED.sell_volume,
                     net_pressure = (stock_sentiment.buy_volume + EXCLUDED.buy_volume) - (stock_sentiment.sell_volume + EXCLUDED.sell_volume)
             """, company_id, period_start, buy_volume, sell_volume)
+        else:
+            async with self.db.pool.acquire() as conn:
+                await conn.execute("""
+                    INSERT INTO stock_sentiment (company_id, period_start, buy_volume, sell_volume, net_pressure)
+                    VALUES ($1, $2, $3, $4, $3 - $4)
+                    ON CONFLICT (company_id, period_start) DO UPDATE
+                    SET buy_volume = stock_sentiment.buy_volume + EXCLUDED.buy_volume,
+                        sell_volume = stock_sentiment.sell_volume + EXCLUDED.sell_volume,
+                        net_pressure = (stock_sentiment.buy_volume + EXCLUDED.buy_volume) - (stock_sentiment.sell_volume + EXCLUDED.sell_volume)
+                """, company_id, period_start, buy_volume, sell_volume)
 
 
 class InteractionQueries:
