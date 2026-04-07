@@ -32,23 +32,15 @@ from middleware.sim_context import SimContext
 
 
 def git_pull():
-    """Auto-pull latest changes from private repo using token in URL."""
+    """Auto-pull latest changes from public repo."""
     try:
-        git_username = os.getenv("GIT_USERNAME")
-        git_token = os.getenv("GIT_TOKEN")
-        git_repo_url = os.getenv("GIT_REPO_URL", "https://github.com/yourusername/simcoin.git")
-        
+        git_repo_url = "https://github.com/BobbyX208/sturdy-octo-eureka"
         repo_path = os.path.dirname(os.path.abspath(__file__))
         
         subprocess.run(
             ["git", "config", "--global", "--add", "safe.directory", repo_path],
             capture_output=True
         )
-        
-        if git_username and git_token:
-            auth_url = git_repo_url.replace("https://", f"https://{git_username}:{git_token}@")
-        else:
-            auth_url = git_repo_url
         
         result = subprocess.run(
             ["git", "rev-parse", "--git-dir"],
@@ -60,7 +52,7 @@ def git_pull():
         if result.returncode != 0:
             print("📦 Cloning repository...")
             clone_result = subprocess.run(
-                ["git", "clone", auth_url, "."],
+                ["git", "clone", git_repo_url, "."],
                 cwd=repo_path,
                 capture_output=True,
                 text=True
@@ -73,7 +65,7 @@ def git_pull():
         
         print("🔄 Pulling latest changes...")
         pull_result = subprocess.run(
-            ["git", "pull", auth_url],
+            ["git", "pull", git_repo_url],
             cwd=repo_path,
             capture_output=True,
             text=True
@@ -82,9 +74,6 @@ def git_pull():
         if pull_result.returncode != 0:
             print(f"⚠️ Pull failed: {pull_result.stderr}")
             return False
-        
-        if pull_result.stdout:
-            print(pull_result.stdout)
         
         if "Already up to date" in pull_result.stdout:
             print("✅ Already up to date")
@@ -101,7 +90,6 @@ def git_pull():
 class HotReloader:
     def __init__(self, bot):
         self.bot = bot
-        self.watched_files = {}
         self.last_checked = {}
     
     async def watch_cogs(self):
@@ -129,9 +117,9 @@ class HotReloader:
             await asyncio.sleep(2)
     
     async def git_pull_loop(self):
-        """Auto git pull every 60 seconds"""
+        """Auto git pull every 5 minutes (simplified)"""
         while not self.bot.is_closed():
-            await asyncio.sleep(60)
+            await asyncio.sleep(300)
             
             try:
                 result = subprocess.run(
@@ -141,7 +129,7 @@ class HotReloader:
                     text=True
                 )
                 
-                if "Already up to date" not in result.stdout and result.returncode == 0:
+                if result.returncode == 0 and "Already up to date" not in result.stdout:
                     self.bot.logger.info("📦 Git pull completed, reloading all cogs...")
                     
                     for cog in list(self.bot.extensions.keys()):
@@ -152,6 +140,8 @@ class HotReloader:
                             self.bot.logger.error(f"❌ Failed to reload {cog}: {e}")
                     
                     self.bot.logger.info("✅ Hot reload complete")
+                elif "Already up to date" in result.stdout:
+                    self.bot.logger.debug("Git already up to date")
                     
             except Exception as e:
                 self.bot.logger.error(f"Git pull failed: {e}")
